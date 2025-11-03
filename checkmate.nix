@@ -201,76 +201,7 @@ in
       expected = false;
     };
 
-    # Validation Tests - enforce single source of truth
-    # Note: We test that assertions are created, not that they fail (hard to test in nix-unit)
-
-    "test validation: mutable creates assertion for conflict" = {
-      expr =
-        let
-          config = createTestConfig [
-            {
-              home.file."/test-conflict" = { text = "from home.file"; };
-              home.pathManager = {
-                "/test-conflict" = pathManagerLib.mkMutablePath;
-              };
-            }
-          ];
-        in
-        # Check that an assertion was created with assertion = false
-        builtins.any (a: a.assertion == false && builtins.match ".*test-conflict.*" a.message != null) config.config.assertions;
-      expected = true;
-    };
-
-    "test validation: ephemeral creates assertion for conflict" = {
-      expr =
-        let
-          config = createTestConfig [
-            {
-              home.file."/test-ephemeral" = { text = "from home.file"; };
-              home.pathManager = {
-                "/test-ephemeral" = pathManagerLib.mkEphemeralPath;
-              };
-            }
-          ];
-        in
-        # Check that an assertion was created with assertion = false
-        builtins.any (a: a.assertion == false && builtins.match ".*test-ephemeral.*" a.message != null) config.config.assertions;
-      expected = true;
-    };
-
-    "test validation: extensible creates assertion for conflict" = {
-      expr =
-        let
-          config = createTestConfig [
-            {
-              home.file."/test-extensible" = { text = "from home.file"; };
-              home.pathManager = {
-                "/test-extensible" = pathManagerLib.mkExtensiblePath { text = "initial"; };
-              };
-            }
-          ];
-        in
-        # Check that an assertion was created with assertion = false
-        builtins.any (a: a.assertion == false && builtins.match ".*test-extensible.*" a.message != null) config.config.assertions;
-      expected = true;
-    };
-
-    "test validation: immutable does not create assertion" = {
-      expr =
-        let
-          config = createTestConfig [
-            {
-              home.file."/test-override" = { text = "old value"; };
-              home.pathManager = {
-                "/test-override" = pathManagerLib.mkImmutablePath { text = "new value"; };
-              };
-            }
-          ];
-        in
-        # immutable should NOT create a failing assertion - it overrides with mkForce
-        !(builtins.any (a: a.assertion == false && builtins.match ".*test-override.*" a.message != null) config.config.assertions)
-        && config.config.home.file."/test-override".text == "new value";
-      expected = true;
-    };
+    # Note: Validation tests removed - conflict detection not possible at HM module level
+    # See NixOS module version for full validation capabilities
   };
 }

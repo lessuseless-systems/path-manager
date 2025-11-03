@@ -91,35 +91,8 @@ in
       # ... placeholder for launchd agent ...
     };
 
-    # Validation: Enforce single source of truth
-    # For non-immutable states, error if path is also declared in home.file
-    assertions = lib.flatten (
-      lib.mapAttrsToList (
-        path: file:
-        lib.optionals (file.state != "immutable") [
-          {
-            assertion = !(config.home.file ? path);
-            message = ''
-              Path '${path}' is declared in both home.file and pathManager (${file.state} state).
-
-              pathManager is meant to be the single source of truth for path management.
-              Please remove the declaration from home.file and use pathManager exclusively.
-
-              For ${file.state} state, use:
-                home.pathManager."${path}" = lib.mk${
-                  if file.state == "ephemeral" then
-                    "EphemeralPath"
-                  else if file.state == "mutable" then
-                    "MutablePath"
-                  else
-                    "ExtensiblePath { ... }"
-                };
-
-              Note: 'immutable' state is allowed to override home.file declarations using mkForce.
-            '';
-          }
-        ]
-      ) cfg
-    );
+    # Note: Validation of conflicting declarations is not possible in the HM module
+    # due to module system evaluation order. For full conflict detection, use the
+    # NixOS module version which operates at the system level.
   };
 }
