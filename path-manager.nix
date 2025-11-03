@@ -1,0 +1,90 @@
+# path-manager.nix
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+
+with lib;
+
+let
+  cfg = config.home.pathManager;
+in
+{
+  options.home.pathManager =
+    with lib.types;
+    mkOption {
+      type = attrsOf (submodule {
+        options = {
+          state = mkOption {
+            type = enum [
+              "immutable"
+              "ephemeral"
+              "mutable"
+              "extensible"
+            ];
+            description = "The desired state of the file.";
+          };
+          source = mkOption {
+            type = nullOr path;
+            default = null;
+            description = "The source file for 'immutable' and 'extensible' states.";
+          };
+          text = mkOption {
+            type = nullOr str;
+            default = null;
+            description = "The text content for 'immutable' and 'extensible' states.";
+          };
+        };
+      });
+      default = { };
+      description = "A declarative way to manage files in an impermanence setup.";
+    };
+
+  config = {
+    # Use mkForce on individual paths to ensure pathManager takes precedence
+    home.file = lib.mkMerge (
+      lib.mapAttrsToList (
+        path: file:
+        lib.mkIf (file.state == "immutable") {
+          ${path} = lib.mkForce {
+            source = file.source;
+            text = file.text;
+          };
+        }
+      ) cfg
+    );
+
+    # Merge with existing persistence, pathManager files added with normal priority
+    # (impermanence module will handle deduplication)
+    home.persistence."/persist/home/${config.home.username}" = {
+      files = lib.filter (path: path != null) (
+        lib.mapAttrsToList (
+          path: file: lib.mkIf (file.state == "mutable" || file.state == "extensible") path
+        ) cfg
+      );
+    };
+
+    # Platform-specific logic for initial content
+    systemd.tmpfiles.rules = lib.mkIf pkgs.stdenv.isLinux (
+      lib.mapAttrsToList (
+        path: file:
+        lib.mkIf (file.state == "extensible") (
+          let
+            content = if file.source != null then file.source else (pkgs.writeText "managed-file" file.text);
+          in
+          "C /persist/home/${config.home.username}/${path} ${content} -"
+        )
+      ) cfg
+    );
+
+    # TODO: Implement nix-darwin equivalent using launchd
+    # See: https://www.launchd.info/
+    # And: https://nix-community.github.io/home-manager/options.html#opt-launchd.agents
+    launchd.agents = lib.mkIf pkgs.stdenv.isDarwin {
+      # ... placeholder for launchd agent ...
+    };
+  };
+}
+
