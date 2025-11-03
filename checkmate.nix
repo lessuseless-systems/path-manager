@@ -202,80 +202,74 @@ in
     };
 
     # Validation Tests - enforce single source of truth
+    # Note: We test that assertions are created, not that they fail (hard to test in nix-unit)
 
-    "test validation: mutable rejects home.file conflict" = {
+    "test validation: mutable creates assertion for conflict" = {
       expr =
         let
-          # This should fail assertion - mutable + home.file conflict
-          result = builtins.tryEval (
-            createTestConfig [
-              {
-                home.file."/test-conflict" = { text = "from home.file"; };
-                home.pathManager = {
-                  "/test-conflict" = pathManagerLib.mkMutablePath;
-                };
-              }
-            ]
-          );
+          config = createTestConfig [
+            {
+              home.file."/test-conflict" = { text = "from home.file"; };
+              home.pathManager = {
+                "/test-conflict" = pathManagerLib.mkMutablePath;
+              };
+            }
+          ];
         in
-        result.success;
-      expected = false;
+        # Check that an assertion was created with assertion = false
+        builtins.any (a: a.assertion == false && builtins.match ".*test-conflict.*" a.message != null) config.config.assertions;
+      expected = true;
     };
 
-    "test validation: ephemeral rejects home.file conflict" = {
+    "test validation: ephemeral creates assertion for conflict" = {
       expr =
         let
-          # This should fail assertion - ephemeral + home.file conflict
-          result = builtins.tryEval (
-            createTestConfig [
-              {
-                home.file."/test-ephemeral" = { text = "from home.file"; };
-                home.pathManager = {
-                  "/test-ephemeral" = pathManagerLib.mkEphemeralPath;
-                };
-              }
-            ]
-          );
+          config = createTestConfig [
+            {
+              home.file."/test-ephemeral" = { text = "from home.file"; };
+              home.pathManager = {
+                "/test-ephemeral" = pathManagerLib.mkEphemeralPath;
+              };
+            }
+          ];
         in
-        result.success;
-      expected = false;
+        # Check that an assertion was created with assertion = false
+        builtins.any (a: a.assertion == false && builtins.match ".*test-ephemeral.*" a.message != null) config.config.assertions;
+      expected = true;
     };
 
-    "test validation: extensible rejects home.file conflict" = {
+    "test validation: extensible creates assertion for conflict" = {
       expr =
         let
-          # This should fail assertion - extensible + home.file conflict
-          result = builtins.tryEval (
-            createTestConfig [
-              {
-                home.file."/test-extensible" = { text = "from home.file"; };
-                home.pathManager = {
-                  "/test-extensible" = pathManagerLib.mkExtensiblePath { text = "initial"; };
-                };
-              }
-            ]
-          );
+          config = createTestConfig [
+            {
+              home.file."/test-extensible" = { text = "from home.file"; };
+              home.pathManager = {
+                "/test-extensible" = pathManagerLib.mkExtensiblePath { text = "initial"; };
+              };
+            }
+          ];
         in
-        result.success;
-      expected = false;
+        # Check that an assertion was created with assertion = false
+        builtins.any (a: a.assertion == false && builtins.match ".*test-extensible.*" a.message != null) config.config.assertions;
+      expected = true;
     };
 
-    "test validation: immutable allows home.file override" = {
+    "test validation: immutable does not create assertion" = {
       expr =
         let
-          # This should succeed - immutable is allowed to override home.file
-          result = builtins.tryEval (
-            createTestConfig [
-              {
-                home.file."/test-override" = { text = "old value"; };
-                home.pathManager = {
-                  "/test-override" = pathManagerLib.mkImmutablePath { text = "new value"; };
-                };
-              }
-            ]
-          );
+          config = createTestConfig [
+            {
+              home.file."/test-override" = { text = "old value"; };
+              home.pathManager = {
+                "/test-override" = pathManagerLib.mkImmutablePath { text = "new value"; };
+              };
+            }
+          ];
         in
-        result.success && result.value.config.home.file."/test-override".text == "new value";
+        # immutable should NOT create a failing assertion - it overrides with mkForce
+        !(builtins.any (a: a.assertion == false && builtins.match ".*test-override.*" a.message != null) config.config.assertions)
+        && config.config.home.file."/test-override".text == "new value";
       expected = true;
     };
   };
