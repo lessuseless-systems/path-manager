@@ -1304,7 +1304,6 @@ in
           persistenceDirs = [ ".config/app" ]; # parent
           conflicts = pathManagerLib.validation.detectHierarchicalConflicts {
             inherit pathManagerDecls homeFilePaths persistenceDirs;
-            homeFilePaths = homeFilePaths;
             persistenceFiles = [ ];
           };
         in

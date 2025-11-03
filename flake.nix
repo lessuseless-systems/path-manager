@@ -26,6 +26,11 @@
 
       # Legacy exports for compatibility
       flakeModule = import ./modules/home-manager/path-manager;
+
+      # Test modules (modular structure - recommended)
+      flakeModules.tests = import ./tests/default.nix; # All 125 tests organized by category
+
+      # Legacy test exports (monolithic files - deprecated)
       flakeModules.checkmate = import ./tests/checkmate.nix;
       flakeModules.checkmate-comprehensive = import ./tests/checkmate-comprehensive.nix;
 
