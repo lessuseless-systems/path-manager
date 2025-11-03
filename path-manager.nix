@@ -61,22 +61,27 @@ in
     home.persistence."/persist/home/${config.home.username}" = {
       files = lib.filter (path: path != null) (
         lib.mapAttrsToList (
-          path: file: lib.mkIf (file.state == "mutable" || file.state == "extensible") path
+          path: file: if (file.state == "mutable" || file.state == "extensible") then path else null
         ) cfg
       );
     };
 
     # Platform-specific logic for initial content
     systemd.tmpfiles.rules = lib.mkIf pkgs.stdenv.isLinux (
-      lib.mapAttrsToList (
-        path: file:
-        lib.mkIf (file.state == "extensible") (
-          let
-            content = if file.source != null then file.source else (pkgs.writeText "managed-file" file.text);
-          in
-          "C /persist/home/${config.home.username}/${path} ${content} -"
-        )
-      ) cfg
+      lib.filter (rule: rule != null) (
+        lib.mapAttrsToList (
+          path: file:
+          if file.state == "extensible" then
+            (
+              let
+                content = if file.source != null then file.source else (pkgs.writeText "managed-file" file.text);
+              in
+              "C /persist/home/${config.home.username}/${path} ${content} -"
+            )
+          else
+            null
+        ) cfg
+      )
     );
 
     # TODO: Implement nix-darwin equivalent using launchd
@@ -87,4 +92,3 @@ in
     };
   };
 }
-
