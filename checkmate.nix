@@ -3,6 +3,7 @@ let
   self = inputs.target;
   home-manager = inputs.target.inputs.home-manager;
   pkgs = import inputs.target.inputs.nixpkgs { system = "x86_64-linux"; };
+  pathManagerLib = self.lib;
 
   createTestConfig =
     modules:
@@ -35,10 +36,7 @@ in
           config = createTestConfig [
             {
               home.pathManager = {
-                "/test-file" = {
-                  state = "immutable";
-                  text = "hello";
-                };
+                "/test-file" = pathManagerLib.mkImmutablePath { text = "hello"; };
               };
             }
           ];
@@ -53,9 +51,7 @@ in
           config = createTestConfig [
             {
               home.pathManager = {
-                "/test-ephemeral-file" = {
-                  state = "ephemeral";
-                };
+                "/test-ephemeral-file" = pathManagerLib.mkEphemeralPath;
               };
             }
           ];
@@ -70,9 +66,7 @@ in
           config = createTestConfig [
             {
               home.pathManager = {
-                "/test-mutable-file" = {
-                  state = "mutable";
-                };
+                "/test-mutable-file" = pathManagerLib.mkMutablePath;
               };
             }
           ];

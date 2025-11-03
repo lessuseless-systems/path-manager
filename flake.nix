@@ -8,9 +8,13 @@
   };
 
   outputs =
-    { ... }:
+    { nixpkgs, ... }:
+    let
+      lib = nixpkgs.lib;
+    in
     {
       flakeModule = import ./path-manager.nix;
       flakeModules.checkmate = import ./checkmate.nix;
+      lib = import ./lib { inherit lib; };
     };
 }
