@@ -13,8 +13,19 @@
       lib = nixpkgs.lib;
     in
     {
+      # Home Manager module - universal, works on any platform
+      homeManagerModules.default = import ./path-manager.nix;
+      homeManagerModules.path-manager = import ./path-manager.nix;
+
+      # NixOS module - full conflict detection for NixOS + impermanence
+      nixosModules.default = import ./nixos-module.nix;
+      nixosModules.path-manager = import ./nixos-module.nix;
+
+      # Legacy exports for compatibility
       flakeModule = import ./path-manager.nix;
       flakeModules.checkmate = import ./checkmate.nix;
+
+      # Library functions
       lib = import ./lib { inherit lib; };
     };
 }
