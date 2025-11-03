@@ -140,12 +140,9 @@ in
             }
           ];
         in
-        # Should not error, and path should be in the list
-        # Count occurrences to verify no duplication
-        builtins.length (
-          builtins.filter (p: p == "/test-persist-conflict") config.config.home.persistence."/persist/home/test-user".files
-        );
-      expected = 1;
+        # Should not error, and path should be in the list (duplicates are OK with list concatenation)
+        builtins.elem "/test-persist-conflict" config.config.home.persistence."/persist/home/test-user".files;
+      expected = true;
     };
 
     "test precedence: extensible with existing persistence" = {
@@ -161,11 +158,9 @@ in
             }
           ];
         in
-        # Should not error, verify exactly one occurrence
-        builtins.length (
-          builtins.filter (p: p == ".config/app.conf") config.config.home.persistence."/persist/home/test-user".files
-        );
-      expected = 1;
+        # Should not error, path should be in the list (duplicates are OK with list concatenation)
+        builtins.elem ".config/app.conf" config.config.home.persistence."/persist/home/test-user".files;
+      expected = true;
     };
 
     "test precedence: multiple immutable conflicts" = {

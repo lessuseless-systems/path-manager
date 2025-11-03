@@ -65,21 +65,12 @@ in
       ) cfg)
     );
 
-    # Merge with existing persistence and deduplicate
-    # Use mkForce to override the entire files list with deduplicated version
+    # Add to persistence list (duplicates are harmless, lists concatenate)
     home.persistence."/persist/home/${config.home.username}" = {
-      files = lib.mkForce (
-        lib.unique (
-          # Get existing persistence files
-          (config.home.persistence."/persist/home/${config.home.username}".files or [ ])
-          ++
-          # Add pathManager files
-          (lib.filter (path: path != null) (
-            lib.mapAttrsToList (
-              path: file: if (file.state == "mutable" || file.state == "extensible") then path else null
-            ) cfg
-          ))
-        )
+      files = lib.filter (path: path != null) (
+        lib.mapAttrsToList (
+          path: file: if (file.state == "mutable" || file.state == "extensible") then path else null
+        ) cfg
       );
     };
 
