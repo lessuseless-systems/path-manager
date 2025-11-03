@@ -74,5 +74,35 @@ in
         builtins.elem "/test-mutable-file" config.config.home.persistence."/persist/home/test-user".files;
       expected = true;
     };
+
+    "test extensible - persisted" = {
+      expr =
+        let
+          config = createTestConfig [
+            {
+              home.pathManager = {
+                ".config/test.conf" = pathManagerLib.mkExtensiblePath { text = "initial content"; };
+              };
+            }
+          ];
+        in
+        builtins.elem ".config/test.conf" config.config.home.persistence."/persist/home/test-user".files;
+      expected = true;
+    };
+
+    "test extensible - tmpfiles rule" = {
+      expr =
+        let
+          config = createTestConfig [
+            {
+              home.pathManager = {
+                ".config/test.conf" = pathManagerLib.mkExtensiblePath { text = "initial content"; };
+              };
+            }
+          ];
+        in
+        builtins.any (rule: builtins.match "C /persist/home/test-user/\\.config/test\\.conf.*" rule != null) config.config.systemd.tmpfiles.rules;
+      expected = true;
+    };
   };
 }
