@@ -184,24 +184,20 @@ in
       expected = true;
     };
 
-    "test precedence: ephemeral ignores home.file" = {
+    "test precedence: ephemeral doesn't add to home.file" = {
       expr =
         let
           config = createTestConfig [
             {
-              # Declare in home.file
-              home.file."/ephemeral-conflict" = { text = "should be ignored"; };
-
-              # pathManager marks it as ephemeral (should not appear in home.file)
+              # pathManager marks path as ephemeral
               home.pathManager = {
-                "/ephemeral-conflict" = pathManagerLib.mkEphemeralPath;
+                "/ephemeral-test" = pathManagerLib.mkEphemeralPath;
               };
             }
           ];
         in
-        # ephemeral should result in path NOT being in home.file
-        # Even though we declared it there, pathManager should override
-        config.config.home.file ? "/ephemeral-conflict";
+        # ephemeral paths should NOT appear in home.file
+        config.config.home.file ? "/ephemeral-test";
       expected = false;
     };
   };

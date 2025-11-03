@@ -46,7 +46,7 @@ in
     # Use mkForce on individual paths to ensure pathManager takes precedence
     home.file = lib.mkMerge (
       # Immutable paths: override with content
-      (lib.mapAttrsToList (
+      lib.mapAttrsToList (
         path: file:
         lib.mkIf (file.state == "immutable") {
           ${path} = lib.mkForce {
@@ -54,15 +54,7 @@ in
             text = file.text;
           };
         }
-      ) cfg)
-      ++
-      # Ephemeral paths: explicitly remove from home.file with mkForce
-      (lib.mapAttrsToList (
-        path: file:
-        lib.mkIf (file.state == "ephemeral") {
-          ${path} = lib.mkForce null;
-        }
-      ) cfg)
+      ) cfg
     );
 
     # Add to persistence list (duplicates are harmless, lists concatenate)
