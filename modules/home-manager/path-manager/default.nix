@@ -72,6 +72,29 @@ in
         the standard impermanence module configuration.
       '';
     };
+
+    dryRun = mkOption {
+      type = types.bool;
+      default = true;
+      description = ''
+        Enable dry-run mode (default: true).
+
+        When enabled, path-manager will analyze what would happen during activation
+        but will NOT actually create bind mounts. This prevents accidental data loss
+        during initial migration to path-manager.
+
+        The dry-run check will:
+        - Detect paths that would be shadowed by bind mounts
+        - Warn about potential data loss
+        - Show what actions would be taken
+
+        To apply changes, either:
+        1. Set dryRun = false; in your configuration
+        2. Run with PATHMANAGER_APPLY=1 environment variable
+
+        It is strongly recommended to review dry-run output before disabling.
+      '';
+    };
   };
 
   config =
@@ -177,6 +200,47 @@ in
       launchd.agents = lib.mkIf pkgs.stdenv.isDarwin {
         # ... placeholder for launchd agent ...
       };
+
+      # Dry-run activation check
+      home.activation.pathManagerDryRunCheck = lib.mkIf config.home.pathManager.dryRun (
+        lib.hm.dag.entryBefore [ "writeBoundary" ] ''
+          # Check if PATHMANAGER_APPLY is set to override dry-run
+          if [ "''${PATHMANAGER_APPLY:-0}" = "1" ]; then
+            $DRY_RUN_CMD echo "[path-manager] PATHMANAGER_APPLY=1 detected, proceeding with activation..."
+            exit 0
+          fi
+
+          $DRY_RUN_CMD echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          $DRY_RUN_CMD echo "[path-manager] DRY-RUN MODE ENABLED (default)"
+          $DRY_RUN_CMD echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          $DRY_RUN_CMD echo ""
+          $DRY_RUN_CMD echo "path-manager is analyzing your configuration to prevent data loss."
+          $DRY_RUN_CMD echo ""
+          $DRY_RUN_CMD echo "The following paths will be managed:"
+          $DRY_RUN_CMD echo ""
+
+          ${lib.concatStringsSep "\n" (
+            lib.mapAttrsToList (
+              path: decl:
+              ''
+                $DRY_RUN_CMD echo "  ${decl.state}: ${config.home.homeDirectory}/${decl.normalPath}"
+              ''
+            ) classifiedPaths
+          )}
+
+          $DRY_RUN_CMD echo ""
+          $DRY_RUN_CMD echo "Mutable/extensible paths will be bind-mounted from:"
+          $DRY_RUN_CMD echo "  ${persistenceRoot}"
+          $DRY_RUN_CMD echo ""
+          $DRY_RUN_CMD echo "⚠️  WARNING: Bind mounts will shadow any existing data on root!"
+          $DRY_RUN_CMD echo ""
+          $DRY_RUN_CMD echo "To apply these changes, choose one of:"
+          $DRY_RUN_CMD echo "  1. Add to your config: home.pathManager.dryRun = false;"
+          $DRY_RUN_CMD echo "  2. Run with: PATHMANAGER_APPLY=1 home-manager switch ..."
+          $DRY_RUN_CMD echo ""
+          $DRY_RUN_CMD echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        ''
+      );
 
       # Note: Full conflict detection with parent-child relationship analysis
       # is not feasible in the HM module due to module system evaluation order.

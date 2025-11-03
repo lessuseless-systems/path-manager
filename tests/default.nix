@@ -23,6 +23,7 @@ let
   edgeCases = import ./edge-cases.nix { inherit inputs; };
   stress = import ./stress.nix { inherit inputs; };
   filesystemValidation = import ./filesystem-validation.nix { inherit inputs; };
+  migrationSafety = import ./migration-safety.nix { inherit inputs; };
 
   # Merge all test suites into one
   pkgs = import inputs.target.inputs.nixpkgs { system = "x86_64-linux"; };
@@ -42,6 +43,7 @@ let
     edgeCases.perSystem.nix-unit.tests
     stress.perSystem.nix-unit.tests
     filesystemValidation.perSystem.nix-unit.tests
+    migrationSafety.perSystem.nix-unit.tests
   ];
 
 in
@@ -67,6 +69,7 @@ in
       edgeCases
       stress
       filesystemValidation
+      migrationSafety
       ;
   };
 }
