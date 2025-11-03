@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(nix flake check:*)",
+      "Bash(timeout 180 nix flake check:*)",
+      "Read(//nix/store/**)",
+      "Bash(git add:*)",
+      "Bash(nix eval:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

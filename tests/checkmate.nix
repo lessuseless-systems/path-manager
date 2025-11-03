@@ -113,9 +113,7 @@ in
           config = createTestConfig [
             {
               # Conflicting declaration - home.file sets one value
-              home.file."/test-conflict" = {
-                text = "from home.file";
-              };
+              home.file."/test-conflict" = { text = "from home.file"; };
               # pathManager should override with mkForce
               home.pathManager = {
                 "/test-conflict" = pathManagerLib.mkImmutablePath { text = "from pathManager"; };
@@ -169,8 +167,12 @@ in
           config = createTestConfig [
             {
               # Multiple conflicting home.file declarations
-              home.file."/conflict1" = { text = "old1"; };
-              home.file."/conflict2" = { text = "old2"; };
+              home.file."/conflict1" = {
+                text = "old1";
+              };
+              home.file."/conflict2" = {
+                text = "old2";
+              };
 
               # pathManager should override both
               home.pathManager = {
@@ -180,7 +182,8 @@ in
             }
           ];
         in
-        config.config.home.file."/conflict1".text == "new1" && config.config.home.file."/conflict2".text == "new2";
+        config.config.home.file."/conflict1".text == "new1"
+        && config.config.home.file."/conflict2".text == "new2";
       expected = true;
     };
 
