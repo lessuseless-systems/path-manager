@@ -45,7 +45,8 @@ in
   config = {
     # Use mkForce on individual paths to ensure pathManager takes precedence
     home.file = lib.mkMerge (
-      lib.mapAttrsToList (
+      # Immutable paths: override with content
+      (lib.mapAttrsToList (
         path: file:
         lib.mkIf (file.state == "immutable") {
           ${path} = lib.mkForce {
@@ -53,16 +54,32 @@ in
             text = file.text;
           };
         }
-      ) cfg
+      ) cfg)
+      ++
+      # Ephemeral paths: explicitly remove from home.file with mkForce
+      (lib.mapAttrsToList (
+        path: file:
+        lib.mkIf (file.state == "ephemeral") {
+          ${path} = lib.mkForce null;
+        }
+      ) cfg)
     );
 
-    # Merge with existing persistence, pathManager files added with normal priority
-    # (impermanence module will handle deduplication)
+    # Merge with existing persistence and deduplicate
+    # Use mkForce to override the entire files list with deduplicated version
     home.persistence."/persist/home/${config.home.username}" = {
-      files = lib.filter (path: path != null) (
-        lib.mapAttrsToList (
-          path: file: if (file.state == "mutable" || file.state == "extensible") then path else null
-        ) cfg
+      files = lib.mkForce (
+        lib.unique (
+          # Get existing persistence files
+          (config.home.persistence."/persist/home/${config.home.username}".files or [ ])
+          ++
+          # Add pathManager files
+          (lib.filter (path: path != null) (
+            lib.mapAttrsToList (
+              path: file: if (file.state == "mutable" || file.state == "extensible") then path else null
+            ) cfg
+          ))
+        )
       );
     };
 
