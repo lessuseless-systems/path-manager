@@ -35,7 +35,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 "/test-file" = pathManagerLib.mkImmutablePath { text = "hello"; };
               };
             }
@@ -50,7 +50,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 "/test-ephemeral-file" = pathManagerLib.mkEphemeralPath;
               };
             }
@@ -65,7 +65,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 "/test-mutable-file" = pathManagerLib.mkMutablePath;
               };
             }
@@ -80,7 +80,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".config/test.conf" = pathManagerLib.mkExtensiblePath { text = "initial content"; };
               };
             }
@@ -95,7 +95,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".config/test.conf" = pathManagerLib.mkExtensiblePath { text = "initial content"; };
               };
             }
@@ -115,7 +115,7 @@ in
               # Conflicting declaration - home.file sets one value
               home.file."/test-conflict" = { text = "from home.file"; };
               # pathManager should override with mkForce
-              home.pathManager = {
+              home.pathManager.paths = {
                 "/test-conflict" = pathManagerLib.mkImmutablePath { text = "from pathManager"; };
               };
             }
@@ -132,7 +132,7 @@ in
             {
               # Declare path in both home.persistence and pathManager
               home.persistence."/persist/home/test-user".files = [ "/test-persist-conflict" ];
-              home.pathManager = {
+              home.pathManager.paths = {
                 "/test-persist-conflict" = pathManagerLib.mkMutablePath;
               };
             }
@@ -150,7 +150,7 @@ in
             {
               # Declare path in both home.persistence and pathManager
               home.persistence."/persist/home/test-user".files = [ ".config/app.conf" ];
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".config/app.conf" = pathManagerLib.mkExtensiblePath { text = "initial"; };
               };
             }
@@ -175,7 +175,7 @@ in
               };
 
               # pathManager should override both
-              home.pathManager = {
+              home.pathManager.paths = {
                 "/conflict1" = pathManagerLib.mkImmutablePath { text = "new1"; };
                 "/conflict2" = pathManagerLib.mkImmutablePath { text = "new2"; };
               };
@@ -193,7 +193,7 @@ in
           config = createTestConfig [
             {
               # pathManager marks path as ephemeral
-              home.pathManager = {
+              home.pathManager.paths = {
                 "/ephemeral-test" = pathManagerLib.mkEphemeralPath;
               };
             }

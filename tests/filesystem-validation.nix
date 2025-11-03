@@ -14,7 +14,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".config/test.conf" = pathManagerLib.mkExtensiblePath { text = "content"; };
               };
             }
@@ -34,7 +34,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".config/app/" = pathManagerLib.mkExtensiblePath { type = "directory"; };
               };
             }
@@ -54,7 +54,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".config/my-app.conf" = pathManagerLib.mkImmutablePath { text = "test"; };
               };
             }
@@ -70,7 +70,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".bashrc" = pathManagerLib.mkMutablePath;
               };
             }
@@ -87,7 +87,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".bashrc" = pathManagerLib.mkImmutablePath { text = "#!/bin/bash"; };
               };
             }
@@ -105,7 +105,7 @@ in
           testDir = pkgs.writeTextDir "config.json" "{}";
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".config/myapp/" = pathManagerLib.mkImmutablePath {
                   source = testDir;
                   type = "directory";
@@ -125,7 +125,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".config/init.conf" = pathManagerLib.mkExtensiblePath { text = "initial content"; };
               };
             }
@@ -146,7 +146,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".config/app/" = pathManagerLib.mkMutablePath // { type = "directory"; };
               };
             }
@@ -163,7 +163,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".config/app/file1" = pathManagerLib.mkMutablePath;
                 ".config/app/file2" = pathManagerLib.mkMutablePath;
                 ".config/app/file3" = pathManagerLib.mkMutablePath;
@@ -183,7 +183,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".cache/ephemeral" = pathManagerLib.mkEphemeralPath;
                 ".cache/temp/" = pathManagerLib.mkEphemeralPath;
               };
@@ -206,7 +206,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".config/test.conf" = pathManagerLib.mkExtensiblePath { text = "test"; };
               };
             }
@@ -231,7 +231,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".local/data/" = pathManagerLib.mkExtensiblePath { type = "directory"; };
               };
             }

@@ -14,7 +14,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".bashrc" = pathManagerLib.mkMutablePath;
               };
               # Manually add a second persistence root
@@ -34,7 +34,7 @@ in
             {
               home.persistence."/persist/home/test-user".files = [ ".file1" ];
               home.persistence."/other/persist/home/test-user".files = [ ".file2" ];
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".file3" = pathManagerLib.mkMutablePath;
               };
             }
@@ -53,7 +53,7 @@ in
           config = createTestConfig [
             {
               home.persistence."/other/root".files = [ ".other-file" ];
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".my-file" = pathManagerLib.mkMutablePath;
               };
             }

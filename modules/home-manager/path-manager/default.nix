@@ -9,55 +9,70 @@
 with lib;
 
 let
-  cfg = config.home.pathManager;
+  cfg = config.home.pathManager.paths;
+  persistenceRoot = config.home.pathManager.persistenceRoot;
 
   # Import path-manager library for type detection and validation
   pathManagerLib = import ../../../lib { inherit lib; };
 
 in
 {
-  options.home.pathManager =
-    with lib.types;
-    mkOption {
-      type = attrsOf (submodule {
-        options = {
-          state = mkOption {
-            type = enum [
-              "immutable"
-              "ephemeral"
-              "mutable"
-              "extensible"
-            ];
-            description = "The desired state of the path.";
+  options.home.pathManager = {
+    paths = with lib.types;
+      mkOption {
+        type = attrsOf (submodule {
+          options = {
+            state = mkOption {
+              type = enum [
+                "immutable"
+                "ephemeral"
+                "mutable"
+                "extensible"
+              ];
+              description = "The desired state of the path.";
+            };
+            source = mkOption {
+              type = nullOr path;
+              default = null;
+              description = "The source file/directory for 'immutable' and 'extensible' states.";
+            };
+            text = mkOption {
+              type = nullOr str;
+              default = null;
+              description = "The text content for 'immutable' and 'extensible' states (files only).";
+            };
+            type = mkOption {
+              type = nullOr (enum [ "file" "directory" ]);
+              default = null;
+              description = ''
+                Explicitly specify whether this path is a file or directory.
+                If not specified, type will be auto-detected based on:
+                - Trailing slash (/) → directory
+                - source pointing to directory → directory
+                - No source/text + (mutable|ephemeral) → directory
+                - Has source or text → file
+                - Default → file
+              '';
+            };
           };
-          source = mkOption {
-            type = nullOr path;
-            default = null;
-            description = "The source file/directory for 'immutable' and 'extensible' states.";
-          };
-          text = mkOption {
-            type = nullOr str;
-            default = null;
-            description = "The text content for 'immutable' and 'extensible' states (files only).";
-          };
-          type = mkOption {
-            type = nullOr (enum [ "file" "directory" ]);
-            default = null;
-            description = ''
-              Explicitly specify whether this path is a file or directory.
-              If not specified, type will be auto-detected based on:
-              - Trailing slash (/) → directory
-              - source pointing to directory → directory
-              - No source/text + (mutable|ephemeral) → directory
-              - Has source or text → file
-              - Default → file
-            '';
-          };
-        };
-      });
-      default = { };
-      description = "A declarative way to manage paths in an impermanence setup.";
+        });
+        default = { };
+        description = "A declarative way to manage paths in an impermanence setup.";
+      };
+
+    persistenceRoot = mkOption {
+      type = types.str;
+      default = "/persist/home/${config.home.username}";
+      example = "/nix/persist/home/alice";
+      description = ''
+        The root directory where persistent files and directories are stored.
+        This is typically the impermanence persistence root for the user.
+
+        Defaults to /persist/home/''${config.home.username} which works with
+        the standard impermanence module configuration.
+      '';
     };
+  };
 
   config =
     let
@@ -126,7 +141,7 @@ in
 
       # Persisted files: add to home.persistence.files
       # Persisted directories: add to home.persistence.directories
-      home.persistence."/persist/home/${config.home.username}" = {
+      home.persistence.${persistenceRoot} = {
         files = map (v: v.normalPath) (attrValues persistedFiles);
         directories = map (v: v.normalPath) (attrValues persistedDirs);
       };
@@ -141,17 +156,17 @@ in
               content =
                 if decl.source != null then decl.source else (pkgs.writeText "managed-file" decl.text);
             in
-            "C /persist/home/${config.home.username}/${decl.normalPath} ${content} -"
+            "C ${persistenceRoot}/${decl.normalPath} ${content} -"
           ) extensibleFiles)
           ++
           # Extensible directories
           (lib.mapAttrsToList (
             path: decl:
             if decl.source != null then
-              "C /persist/home/${config.home.username}/${decl.normalPath} ${decl.source} -"
+              "C ${persistenceRoot}/${decl.normalPath} ${decl.source} -"
             else
               # For directories without source, just create empty dir
-              "d /persist/home/${config.home.username}/${decl.normalPath} 0755 - - -"
+              "d ${persistenceRoot}/${decl.normalPath} 0755 - - -"
           ) extensibleDirs)
         )
       );

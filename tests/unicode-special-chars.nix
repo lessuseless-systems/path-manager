@@ -14,7 +14,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".config/🎨-theme.json" = pathManagerLib.mkMutablePath;
               };
             }
@@ -29,7 +29,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".config/配置.conf" = pathManagerLib.mkImmutablePath { text = "test"; };
               };
             }
@@ -59,7 +59,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".config/app-v1.2.3.conf" = pathManagerLib.mkMutablePath;
               };
             }

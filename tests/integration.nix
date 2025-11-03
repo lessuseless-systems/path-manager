@@ -14,7 +14,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 # Persist the entire Default profile directory
                 ".config/chromium/Default/" = pathManagerLib.mkMutablePath // { type = "directory"; };
                 # Initialize cookies if they don't exist
@@ -38,7 +38,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 # Immutable config
                 ".config/app/config.json" = pathManagerLib.mkImmutablePath { text = "{}"; };
                 # Mutable data in same tree
@@ -68,7 +68,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 # Immutable
                 ".bashrc" = pathManagerLib.mkImmutablePath { text = "#!/bin/bash"; };
                 # Ephemeral

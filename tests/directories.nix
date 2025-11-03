@@ -14,7 +14,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".local/state/" = pathManagerLib.mkMutablePath // { type = "directory"; };
               };
             }
@@ -29,7 +29,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".local/state/file.db" = pathManagerLib.mkMutablePath;
               };
             }
@@ -44,7 +44,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".config/app/" = pathManagerLib.mkExtensiblePath { text = "init"; };
               };
             }
@@ -59,7 +59,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".config/myapp/" = pathManagerLib.mkImmutablePath {
                   source = pkgs.writeTextDir "config.json" "{}";
                   type = "directory";
@@ -77,7 +77,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".cache/" = pathManagerLib.mkEphemeralPath;
               };
             }
@@ -92,7 +92,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".cache/" = pathManagerLib.mkEphemeralPath;
               };
             }
@@ -107,7 +107,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".local/data/" = pathManagerLib.mkExtensiblePath { type = "directory"; };
               };
             }
@@ -124,7 +124,7 @@ in
         let
           config = createTestConfig [
             {
-              home.pathManager = {
+              home.pathManager.paths = {
                 ".mozilla/" = pathManagerLib.mkMutablePath; # auto-detected as directory
               };
             }
