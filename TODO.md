@@ -131,7 +131,9 @@ options.home.pathManager = {
       but doesn't actually create bind mounts or modify anything.
 
       This is the safe default for first-time users. After reviewing warnings
-      and migrating data, set to false to activate.
+      and migrating data, you can:
+      - Set dryRun = false in config (always apply)
+      - Or use --apply CLI flag (one-time override)
     '';
   };
 
@@ -162,11 +164,52 @@ options.home.pathManager = {
 };
 ```
 
+**CLI Flag Support:**
+
+The `--apply` flag overrides `dryRun` at activation time without modifying config.
+
+**Usage:**
+```bash
+# First time: dry-run (shows warnings, no changes)
+home-manager switch
+
+# Ready to apply: one-time override
+home-manager switch --apply
+
+# Or commit to always apply in config
+# Set dryRun = false, then:
+home-manager switch  # Always applies from now on
+```
+
+**Implementation Options:**
+
+Option A - Environment variable (simplest):
+```bash
+PATHMANAGER_APPLY=1 home-manager switch
+```
+
+Option B - Home-manager extraSpecialArgs:
+```bash
+home-manager switch --extra-specialArgs '{ pathManagerApply = true; }'
+```
+
+Option C - Wrapper script:
+```bash
+#!/usr/bin/env bash
+# ~/.local/bin/home-manager-apply
+PATHMANAGER_APPLY=1 home-manager "$@"
+
+# Usage: home-manager-apply switch
+```
+
+Recommend **Option A** (environment variable) for simplicity.
+
 **Files to Create/Modify:**
 
 1. **modules/home-manager/path-manager/default.nix**
    - Add `dryRun`, `migrationMode`, `migrationBackup` options
    - Add `home.activation.pathManagerCheck` script
+   - Check for `PATHMANAGER_APPLY` env var (overrides `dryRun`)
    - Dry-run: scan and report, no modifications
    - Migration modes: warn/error/auto/disabled logic
    - Auto-migration: copy with backups
@@ -181,15 +224,23 @@ options.home.pathManager = {
      - Copy preserving attributes
      - Verify success
 
-3. **tests/migration-safety.nix** (new)
+3. **packages/home-manager-apply.nix** (new - convenience wrapper)
+   - Wrapper script for `home-manager` that handles `--apply` flag
+   - Parses args, sets `PATHMANAGER_APPLY=1` if `--apply` present
+   - Passes remaining args to `home-manager`
+   - Install to `$HOME/.local/bin/home-manager` (or separate name)
+   - Usage: `home-manager switch --apply`
+
+4. **tests/migration-safety.nix** (new)
    - Test dry-run detection (finds shadowed data)
    - Test migration mode "warn" (shows warnings)
    - Test migration mode "error" (aborts)
    - Test migration mode "auto" (copies data)
    - Test backup creation
    - Test permissions preservation
+   - Test environment variable override (`PATHMANAGER_APPLY=1`)
 
-4. **MIGRATION.md**
+5. **MIGRATION.md**
    - Add "Migration Safety" section
    - Document the 4-layer approach
    - Add troubleshooting: "What if I already lost data?"
