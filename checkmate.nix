@@ -71,7 +71,7 @@ in
             }
           ];
         in
-        config.config.home.persistence."/persist/home/test-user".files ? "/test-mutable-file";
+        builtins.elem "/test-mutable-file" config.config.home.persistence."/persist/home/test-user".files;
       expected = true;
     };
   };
