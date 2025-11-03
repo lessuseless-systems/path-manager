@@ -200,5 +200,83 @@ in
         config.config.home.file ? "/ephemeral-test";
       expected = false;
     };
+
+    # Validation Tests - enforce single source of truth
+
+    "test validation: mutable rejects home.file conflict" = {
+      expr =
+        let
+          # This should fail assertion - mutable + home.file conflict
+          result = builtins.tryEval (
+            createTestConfig [
+              {
+                home.file."/test-conflict" = { text = "from home.file"; };
+                home.pathManager = {
+                  "/test-conflict" = pathManagerLib.mkMutablePath;
+                };
+              }
+            ]
+          );
+        in
+        result.success;
+      expected = false;
+    };
+
+    "test validation: ephemeral rejects home.file conflict" = {
+      expr =
+        let
+          # This should fail assertion - ephemeral + home.file conflict
+          result = builtins.tryEval (
+            createTestConfig [
+              {
+                home.file."/test-ephemeral" = { text = "from home.file"; };
+                home.pathManager = {
+                  "/test-ephemeral" = pathManagerLib.mkEphemeralPath;
+                };
+              }
+            ]
+          );
+        in
+        result.success;
+      expected = false;
+    };
+
+    "test validation: extensible rejects home.file conflict" = {
+      expr =
+        let
+          # This should fail assertion - extensible + home.file conflict
+          result = builtins.tryEval (
+            createTestConfig [
+              {
+                home.file."/test-extensible" = { text = "from home.file"; };
+                home.pathManager = {
+                  "/test-extensible" = pathManagerLib.mkExtensiblePath { text = "initial"; };
+                };
+              }
+            ]
+          );
+        in
+        result.success;
+      expected = false;
+    };
+
+    "test validation: immutable allows home.file override" = {
+      expr =
+        let
+          # This should succeed - immutable is allowed to override home.file
+          result = builtins.tryEval (
+            createTestConfig [
+              {
+                home.file."/test-override" = { text = "old value"; };
+                home.pathManager = {
+                  "/test-override" = pathManagerLib.mkImmutablePath { text = "new value"; };
+                };
+              }
+            ]
+          );
+        in
+        result.success && result.value.config.home.file."/test-override".text == "new value";
+      expected = true;
+    };
   };
 }
